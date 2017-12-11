@@ -10,3 +10,6 @@ then
 else
   echo "RESULT => File equals"
 fi
+
+rm *.encode
+rm *.decoded

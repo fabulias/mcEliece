@@ -1,4 +1,3 @@
-# Core Library Utilities
 import numpy as np
 import pickle
 import os.path
@@ -9,7 +8,6 @@ from utils import *
 class privateKeyH84:
 	"""Datastructure to represent our Private Key"""
 	def __init__(self,S=None,P=None):
-		"""Initalizer that will set S & P matricies to random if not given values"""
 		#Hamming 8,4 in standard
 		self.G = np.matrix([
 		[1,0,0,0,0,1,1,1],
@@ -24,53 +22,33 @@ class privateKeyH84:
 		[1,1,1,0,0,0,0,1]
 		], dtype=int)
 
-		#Can create these from known values, otherwise random
 		if S == None:
-			self.S = modTwo(genSMatrix(4))
+			self.S = modTwo(generateS(4))
 		else:
 			self.S = S
 
 		if P == None:
-			self.P = modTwo(genPMatrix(8))
+			self.P = modTwo(generateP(8))
 		else:
 			self.P = P
-
-	def printCode(self):
-		"""Canonical print to screen function"""
-		print "S: \n" + str(self.S) + "\n"
-		print "P: \n" + str(self.P) + "\n"
-		print "GPrime: \n" + str(self.makeGPrime()) + "\n"
-
-	def writeKeyToFile(self, keyFile):
-		"""Saves key to a pickle file"""
-		try:
-			pickle.dump(self, open(keyFile,"wb"))
-		except:
-			print "Could not save key file to: ",keyFile
-			exit(1)
-
-	def readKeyFromFile(self,keyFile):
-		"""Reads key from a pickle file"""
-		try:
-			newPriv = pickle.load( open(keyFile,"rb"))
-			self.S = newPriv.S
-			self.P = newPriv.P
-		except:
-			print "Could not load key file from: ",keyFile
-			exit(1)
+		print ">> Private Key <<"
+		print "G => ",self.G
+		print "S => ",self.S
+		print "P => ",self.P
 
 	def makeGPrime(self):
-		"""Creates the GPrime encrytion Matrix"""
-		return modTwo(self.S*self.G*self.P)
+		res = modTwo(self.S*self.G*self.P)
+		print ">> Public Key <<"
+		print "G' => ", res
+		print "t => ", 1
+		return res
 
 	def decrypt(self,c):
-		"""When given cipher text will decode to message"""
 		cHat = c * modTwo(self.P.I.astype(int))
-		m = bitFlip(cHat,syndromeLookup(self.H,modTwo(self.H*cHat.T)))
+		m = bitFlip(cHat,syndrome(self.H,modTwo(self.H*cHat.T)))
 		return modTwo(m[0,0:4] * modTwo(self.S.I.astype(int)))
 
 	def decryptFile(self,f):
-		"""Will decrypt whole file"""
 		cf = open(f,"rb")
 		cb1 = cf.read(1)
 		cb2 = cf.read(1)
@@ -79,7 +57,6 @@ class privateKeyH84:
 
 		while cb1 and cb2:
 
-			#First Byte of Cipher Text
 			c_1 = '{0:08b}'.format(ord(cb1))[0:8]
  			c1_l = []
 			m1 = ""
@@ -92,7 +69,6 @@ class privateKeyH84:
 			for d in range(0,d1.size):
 				m1 += str(d1.item(d))
 
-			#Second Byte of Cipher Text
 			c_2 = '{0:08b}'.format(ord(cb2))[0:8]
  			c2_l = []
 			m2 = ""
@@ -105,38 +81,9 @@ class privateKeyH84:
 			for d in range(0,d2.size):
 				m2 += str(d2.item(d))
 
-			#print m1+m2
 			mf.write(chr(int(m1+m2,2)))
 			cb1 = cf.read(1)
 			cb2 = cf.read(1)
-
-		mf.close()
-		cf.close()
-
-	def dnaFileDecrypt(self,f,dlu):
-		"""Decrypts a file that has been turned into a DNA representation"""
-		cf = open(f,"r")
-		c1 = cf.readline().strip("\n")
-		c2 = cf.readline().strip("\n")
-
-		mf = open(f+".decoded","w")
-
-		while c1 and c2:
-			m1 = ""
-			m2 = ""
-			mat1 = np.matrix(" ".join(dlu.lookDNADecrypt(c1)),dtype=int)
-			mat2 = np.matrix(" ".join(dlu.lookDNADecrypt(c2)),dtype=int)
-			d1 = self.decrypt(mat1)
-			d2 = self.decrypt(mat2)
-			for d in range(0,d1.size):
-				m1 += str(d1.item(d))
-
-			for d in range(0,d2.size):
-				m2 += str(d2.item(d))
-
-			mf.write(chr(int(m1+m2,2)))
-			c1 = cf.readline().strip("\n")
-			c2 = cf.readline().strip("\n")
 
 		mf.close()
 		cf.close()
@@ -147,29 +94,7 @@ class publicKeyH84:
 	def __init__(self,GPrime):
 		self.GPrime = GPrime
 
-	def printCode(self):
-		"""Canonical print to screen"""
-		print "GPrime: \n" + str(self.GPrime) + "\n"
-
-	def writeKeyToFile(self, keyFile):
-		"""Saves key to a pickle file"""
-		try:
-			pickle.dump(self, open(keyFile,"wb"))
-		except:
-			print "Could not save key file to: ",keyFile
-			exit(1)
-
-	def readKeyFromFile(self,keyFile):
-		"""Reads key from a pickle file"""
-		try:
-			newPub = pickle.load( open(keyFile,"rb"))
-			self.GPrime = newPub.GPrime
-		except:
-			print "Could not load key file from: ",keyFile
-			exit(1)
-
 	def encrypt(self,m):
-		"""When given a message will encode"""
 		#Error vector will be random
 		z = random.randint(1,7)
 		c = bitFlip(modTwo(m*self.GPrime),z)

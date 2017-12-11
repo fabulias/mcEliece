@@ -1,6 +1,6 @@
 import numpy as np
 
-def genSMatrix(k):
+def generateS(k):
 	sMaybe = np.matrix(np.random.randint(0,2,k*k).reshape(k,k).astype(int))
 	while True:
 		try:
@@ -9,7 +9,7 @@ def genSMatrix(k):
 		except:
 			sMaybe = np.matrix(np.random.randint(0,2,k*k).reshape(k,k).astype(int))
 
-def genPMatrix(n,keep=False):
+def generateP(n,keep=False):
 	p = np.identity(n, dtype=int)
 	if keep:
 		return np.matrix(p).reshape(n,n)
@@ -28,14 +28,13 @@ def bitFlip(C,n):
 		index = random.randint(1,C.size -1)
 	else:
 		index = n
-
 	if C[0,index-1] == 1:
 		C[0,index-1] = 0
 	else:
 		C[0,index-1] = 1
 	return C
 
-def all_zeros(d):
+def allZeros(d):
 	zc = 0
 	for x in d:
 		if x == 0:
@@ -45,33 +44,13 @@ def all_zeros(d):
 	else:
 		return False
 
-def syndromeLookup(H,d):
+def syndrome(H,d):
 	t = H.T.tolist()
 	s = d.T.tolist()[0]
 
-	if all_zeros(s):
+	if allZeros(s):
 		return 0
 	try:
 		return t.index(s) + 1
 	except:
 		return 0
-
-def checkOldGuesses(oG,newGuess):
-	for s in oG:
-		if np.array_equal(newGuess.A1,s.A1):
-			return False
-		else:
-			return True
-
-def makeString(matrix):
-	message = ""
-	for m in matrix.A1:
-		if m == "[":
-			pass
-		elif m == "]":
-			pass
-		elif m == " ":
-			pass
-		else:
-			message += str(m)
-	return message
