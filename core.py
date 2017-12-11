@@ -5,10 +5,8 @@ import random
 import csv
 from utils import *
 
-class privateKeyH84:
-	"""Datastructure to represent our Private Key"""
+class privateKey:
 	def __init__(self,S=None,P=None):
-		#Hamming 8,4 in standard
 		self.G = np.matrix([
 		[1,0,0,0,0,1,1,1],
 		[0,1,0,0,1,0,1,1],
@@ -31,16 +29,19 @@ class privateKeyH84:
 			self.P = modTwo(generateP(8))
 		else:
 			self.P = P
+
+
+	def printMatrix(self):
 		print ">> Private Key <<"
 		print "G => ",self.G
 		print "S => ",self.S
 		print "P => ",self.P
+		print ">> Public Key <<"
+		print "G' => ", modTwo(self.S*self.G*self.P)
+		print "t => ", 1
 
 	def makeGPrime(self):
 		res = modTwo(self.S*self.G*self.P)
-		print ">> Public Key <<"
-		print "G' => ", res
-		print "t => ", 1
 		return res
 
 	def decrypt(self,c):
@@ -88,20 +89,16 @@ class privateKeyH84:
 		mf.close()
 		cf.close()
 
-#### Public Key H84 ####
-class publicKeyH84:
-	"""Public Key Data Structure"""
+class publicKey:
 	def __init__(self,GPrime):
 		self.GPrime = GPrime
 
 	def encrypt(self,m):
-		#Error vector will be random
 		z = random.randint(1,7)
 		c = bitFlip(modTwo(m*self.GPrime),z)
 		return c
 
 	def encryptFile(self,f):
-		"""Encrypts a whole file"""
 
 		mf = open(f,"rb")
 		m = mf.read(1)
@@ -109,7 +106,6 @@ class publicKeyH84:
 		cf = open(f+".encode","wb")
 
 		while m:
-			#First half byte of message text
 			m_1 = '{0:08b}'.format(ord(m))[0:4]
 			m1_l = []
 			c1 = ""
@@ -122,7 +118,6 @@ class publicKeyH84:
 				c1 += str(d1.item(d))
 			cf.write(chr(int(c1,2)))
 
-			#Second half byte of message text
 			m_2 = '{0:08b}'.format(ord(m))[4:]
 			m2_l = []
 			c2 = ""
