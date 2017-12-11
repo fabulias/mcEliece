@@ -20,3 +20,4 @@ for ix in range(0, 10):
         print ('RESULT', 'Text equals', color='green', end='\n', sep=' => ')
     else:
         print ('RESULT', 'Text no equals', color='red', end='\n', sep=' => ')
+    tPriv.printMatrix()

@@ -12,4 +12,3 @@ else
 fi
 
 rm *.encode
-rm *.decoded
